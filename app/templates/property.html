@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block main %}
+<div class="mt-4">
+  <a href="{{ url_for('properties') }}" class="btn btn-outline-secondary mb-3">&larr; Back to Listings</a>
+
+  <div class="card shadow-sm">
+    {% if property.photo %}
+      <img src="{{ url_for('static', filename='uploads/' ~ property.photo) }}"
+           class="card-img-top" alt="{{ property.title }}" style="max-height:400px;object-fit:cover;">
+    {% endif %}
+    <div class="card-body">
+      <h1 class="card-title">{{ property.title }}</h1>
+      <p class="text-muted fs-5">{{ property.location }}</p>
+
+      <div class="row mb-3">
+        <div class="col-auto">
+          <span class="badge bg-primary fs-6">${{ "%.2f"|format(property.price) }}</span>
+        </div>
+        <div class="col-auto">
+          <span class="badge bg-secondary fs-6">{{ property.property_type }}</span>
+        </div>
+      </div>
+
+      <div class="d-flex gap-3 mb-3">
+        <span><strong>{{ property.bedrooms }}</strong> Bedroom(s)</span>
+        <span><strong>{{ property.bathrooms }}</strong> Bathroom(s)</span>
+      </div>
+
+      <hr>
+      <h5>Description</h5>
+      <p class="card-text">{{ property.description }}</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

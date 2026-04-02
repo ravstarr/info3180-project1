@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block main %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card shadow-sm mt-4">
+      <div class="card-body">
+        <h2 class="card-title mb-4">Add a New Property</h2>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('create_property') }}" enctype="multipart/form-data" novalidate>
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            {{ form.title.label(class="form-label") }}
+            {{ form.title(class="form-control") }}
+          </div>
+
+          <div class="mb-3">
+            {{ form.description.label(class="form-label") }}
+            {{ form.description(class="form-control", rows=3) }}
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              {{ form.bedrooms.label(class="form-label") }}
+              {{ form.bedrooms(class="form-control") }}
+            </div>
+            <div class="col-md-6 mb-3">
+              {{ form.bathrooms.label(class="form-label") }}
+              {{ form.bathrooms(class="form-control") }}
+            </div>
+          </div>
+
+          <div class="mb-3">
+            {{ form.location.label(class="form-label") }}
+            {{ form.location(class="form-control") }}
+          </div>
+
+          <div class="mb-3">
+            {{ form.price.label(class="form-label") }}
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              {{ form.price(class="form-control") }}
+            </div>
+          </div>
+
+          <div class="mb-3">
+            {{ form.property_type.label(class="form-label") }}
+            {{ form.property_type(class="form-select") }}
+          </div>
+
+          <div class="mb-3">
+            {{ form.photo.label(class="form-label") }}
+            {{ form.photo(class="form-control") }}
+          </div>
+
+          <button type="submit" class="btn btn-primary">Add Property</button>
+          <a href="{{ url_for('properties') }}" class="btn btn-outline-secondary ms-2">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

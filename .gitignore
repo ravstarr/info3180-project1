@@ -24,3 +24,10 @@ node_modules
 
 .env
 .flaskenv
+
+# SQLite database
+*.db
+
+# Uploaded photos (keep the directory itself)
+app/static/uploads/*
+!app/static/uploads/.gitkeep

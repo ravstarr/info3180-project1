@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block main %}
+<div class="mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="display-6 fw-bold">Property Listings</h1>
+    <a href="{{ url_for('create_property') }}" class="btn btn-primary">Add Property</a>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  {% if properties %}
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+      {% for prop in properties %}
+        <div class="col">
+          <div class="card h-100 shadow-sm">
+            {% if prop.photo %}
+              <img src="{{ url_for('static', filename='uploads/' ~ prop.photo) }}"
+                   class="card-img-top" alt="{{ prop.title }}" style="height:200px;object-fit:cover;">
+            {% else %}
+              <div class="bg-secondary text-white d-flex align-items-center justify-content-center"
+                   style="height:200px;">
+                <span>No Image</span>
+              </div>
+            {% endif %}
+            <div class="card-body">
+              <h5 class="card-title">{{ prop.title }}</h5>
+              <p class="card-text text-muted">{{ prop.location }}</p>
+              <p class="card-text">
+                <strong>${{ "%.2f"|format(prop.price) }}</strong>
+                &nbsp;&bull;&nbsp;{{ prop.property_type }}
+              </p>
+              <p class="card-text small">
+                {{ prop.bedrooms }} bed &bull; {{ prop.bathrooms }} bath
+              </p>
+            </div>
+            <div class="card-footer bg-transparent">
+              <a href="{{ url_for('property_detail', propertyid=prop.id) }}" class="btn btn-sm btn-outline-primary">
+                View Details
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-info">No properties found. <a href="{{ url_for('create_property') }}">Add one!</a></div>
+  {% endif %}
+</div>
+{% endblock %}
