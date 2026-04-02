@@ -6,11 +6,26 @@ This file contains the routes for your application.
 """
 
 import os
+import uuid
 from app import app, db
 from app.models import Property
 from app.forms import PropertyForm
 from flask import render_template, request, redirect, url_for, flash
 from werkzeug.utils import secure_filename
+
+
+###
+# The functions below should be applicable to all Flask apps.
+###
+
+# Display Flask WTF errors as Flash messages
+def flash_errors(form):
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(u"Error in the %s field - %s" % (
+                getattr(form, field).label.text,
+                error
+            ), 'danger')
 
 
 ###
@@ -34,9 +49,11 @@ def create_property():
     """Render the property creation form and handle submissions."""
     form = PropertyForm()
     if form.validate_on_submit():
-        # Save uploaded photo
+        # Save uploaded photo with a unique filename to prevent collisions
         photo = form.photo.data
-        filename = secure_filename(photo.filename)
+        original_filename = secure_filename(photo.filename)
+        ext = os.path.splitext(original_filename)[1]
+        filename = uuid.uuid4().hex + ext
         upload_folder = app.config['UPLOAD_FOLDER']
         os.makedirs(upload_folder, exist_ok=True)
         photo.save(os.path.join(upload_folder, filename))
@@ -74,19 +91,6 @@ def property_view(propertyid):
     prop = Property.query.get_or_404(propertyid)
     return render_template('property.html', property=prop)
 
-
-###
-# The functions below should be applicable to all Flask apps.
-###
-
-# Display Flask WTF errors as Flash messages
-def flash_errors(form):
-    for field, errors in form.errors.items():
-        for error in errors:
-            flash(u"Error in the %s field - %s" % (
-                getattr(form, field).label.text,
-                error
-            ), 'danger')
 
 @app.route('/<file_name>.txt')
 def send_text_file(file_name):
