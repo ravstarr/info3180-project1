@@ -5,8 +5,27 @@ Werkzeug Documentation:  https://werkzeug.palletsprojects.com/
 This file contains the routes for your application.
 """
 
-from app import app
-from flask import render_template, request, redirect, url_for
+import os
+import uuid
+from app import app, db
+from app.models import Property
+from app.forms import PropertyForm
+from flask import render_template, request, redirect, url_for, flash
+from werkzeug.utils import secure_filename
+
+
+###
+# The functions below should be applicable to all Flask apps.
+###
+
+# Display Flask WTF errors as Flash messages
+def flash_errors(form):
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(u"Error in the %s field - %s" % (
+                getattr(form, field).label.text,
+                error
+            ), 'danger')
 
 
 ###
@@ -25,18 +44,53 @@ def about():
     return render_template('about.html', name="Mary Jane")
 
 
-###
-# The functions below should be applicable to all Flask apps.
-###
+@app.route('/properties/create', methods=['GET', 'POST'])
+def create_property():
+    """Render the property creation form and handle submissions."""
+    form = PropertyForm()
+    if form.validate_on_submit():
+        # Save uploaded photo with a unique filename to prevent collisions
+        photo = form.photo.data
+        original_filename = secure_filename(photo.filename)
+        ext = os.path.splitext(original_filename)[1]
+        filename = uuid.uuid4().hex + ext
+        upload_folder = app.config['UPLOAD_FOLDER']
+        os.makedirs(upload_folder, exist_ok=True)
+        photo.save(os.path.join(upload_folder, filename))
 
-# Display Flask WTF errors as Flash messages
-def flash_errors(form):
-    for field, errors in form.errors.items():
-        for error in errors:
-            flash(u"Error in the %s field - %s" % (
-                getattr(form, field).label.text,
-                error
-            ), 'danger')
+        # Save property to database
+        prop = Property(
+            title=form.title.data,
+            description=form.description.data,
+            no_of_rooms=form.no_of_rooms.data,
+            no_of_bathrooms=form.no_of_bathrooms.data,
+            location=form.location.data,
+            photo=filename,
+            property_type=form.property_type.data,
+        )
+        db.session.add(prop)
+        db.session.commit()
+
+        flash('Property successfully added!', 'success')
+        return redirect(url_for('properties'))
+
+    flash_errors(form)
+    return render_template('create_property.html', form=form)
+
+
+@app.route('/properties')
+def properties():
+    """Render a list of all properties."""
+    props = Property.query.all()
+    return render_template('properties.html', properties=props)
+
+
+@app.route('/properties/<int:propertyid>')
+def property_view(propertyid):
+    """Render details for a specific property."""
+    prop = Property.query.get_or_404(propertyid)
+    return render_template('property.html', property=prop)
+
 
 @app.route('/<file_name>.txt')
 def send_text_file(file_name):
