@@ -5,13 +5,27 @@ Werkzeug Documentation:  https://werkzeug.palletsprojects.com/
 This file contains the routes for your application.
 """
 
-from app import app
-from flask import render_template, request, redirect, url_for
+import os
+from app import app, db
+from app.models import Property
+from app.forms import PropertyForm
+from flask import render_template, request, redirect, url_for, flash
+from werkzeug.utils import secure_filename
 
 
 ###
 # Routing for your application.
 ###
+
+# Display Flask WTF errors as Flash messages
+def flash_errors(form):
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(u"Error in the %s field - %s" % (
+                getattr(form, field).label.text,
+                error
+            ), 'danger')
+
 
 @app.route('/')
 def home():
@@ -25,18 +39,59 @@ def about():
     return render_template('about.html', name="Mary Jane")
 
 
+@app.route('/properties/create', methods=['GET', 'POST'])
+def create_property():
+    """Render the property creation form and handle submissions."""
+    form = PropertyForm()
+    if form.validate_on_submit():
+        # Handle photo upload
+        photo_filename = None
+        if form.photo.data:
+            photo_file = form.photo.data
+            filename = secure_filename(photo_file.filename)
+            upload_folder = app.config['UPLOAD_FOLDER']
+            os.makedirs(upload_folder, exist_ok=True)
+            photo_file.save(os.path.join(upload_folder, filename))
+            photo_filename = filename
+
+        # Save property to database
+        new_property = Property(
+            title=form.title.data,
+            description=form.description.data,
+            bedrooms=form.bedrooms.data,
+            bathrooms=form.bathrooms.data,
+            location=form.location.data,
+            price=form.price.data,
+            property_type=form.property_type.data,
+            photo=photo_filename,
+        )
+        db.session.add(new_property)
+        db.session.commit()
+
+        flash('Property successfully added!', 'success')
+        return redirect(url_for('properties'))
+
+    flash_errors(form)
+    return render_template('create_property.html', form=form)
+
+
+@app.route('/properties')
+def properties():
+    """Render a list of all property listings."""
+    all_properties = Property.query.all()
+    return render_template('properties.html', properties=all_properties)
+
+
+@app.route('/properties/<int:propertyid>')
+def property_detail(propertyid):
+    """Render the detail page for a single property."""
+    prop = db.get_or_404(Property, propertyid)
+    return render_template('property.html', property=prop)
+
+
 ###
 # The functions below should be applicable to all Flask apps.
 ###
-
-# Display Flask WTF errors as Flash messages
-def flash_errors(form):
-    for field, errors in form.errors.items():
-        for error in errors:
-            flash(u"Error in the %s field - %s" % (
-                getattr(form, field).label.text,
-                error
-            ), 'danger')
 
 @app.route('/<file_name>.txt')
 def send_text_file(file_name):
@@ -61,3 +116,4 @@ def add_header(response):
 def page_not_found(error):
     """Custom 404 page."""
     return render_template('404.html'), 404
+
