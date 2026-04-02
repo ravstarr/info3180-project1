@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block css %}{% endblock %}
+
+{% block main %}
+<div class="row mt-4">
+  <div class="col-md-8 offset-md-2">
+    <a href="{{ url_for('properties') }}" class="btn btn-outline-secondary mb-3">&larr; Back to Properties</a>
+
+    <div class="card shadow">
+      {% if property.photo %}
+      <img src="{{ url_for('static', filename='uploads/' + property.photo) }}"
+           class="card-img-top" alt="{{ property.title }}" style="max-height:400px;object-fit:cover;">
+      {% endif %}
+      <div class="card-body">
+        <h2 class="card-title">{{ property.title }}</h2>
+        <p class="text-muted mb-1">
+          <strong>Location:</strong> {{ property.location }}
+        </p>
+        <p class="mb-1">
+          <span class="badge bg-primary">{{ property.property_type | capitalize }}</span>
+        </p>
+        <hr>
+        <div class="row text-center mb-3">
+          <div class="col-6">
+            <h5>{{ property.no_of_rooms }}</h5>
+            <small class="text-muted">Bedroom(s)</small>
+          </div>
+          <div class="col-6">
+            <h5>{{ property.no_of_bathrooms }}</h5>
+            <small class="text-muted">Bathroom(s)</small>
+          </div>
+        </div>
+        <hr>
+        <h5>Description</h5>
+        <p>{{ property.description }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}{% endblock %}

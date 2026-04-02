@@ -5,8 +5,12 @@ Werkzeug Documentation:  https://werkzeug.palletsprojects.com/
 This file contains the routes for your application.
 """
 
-from app import app
-from flask import render_template, request, redirect, url_for
+import os
+from app import app, db
+from app.models import Property
+from app.forms import PropertyForm
+from flask import render_template, request, redirect, url_for, flash
+from werkzeug.utils import secure_filename
 
 
 ###
@@ -23,6 +27,52 @@ def home():
 def about():
     """Render the website's about page."""
     return render_template('about.html', name="Mary Jane")
+
+
+@app.route('/properties/create', methods=['GET', 'POST'])
+def create_property():
+    """Render the property creation form and handle submissions."""
+    form = PropertyForm()
+    if form.validate_on_submit():
+        # Save uploaded photo
+        photo = form.photo.data
+        filename = secure_filename(photo.filename)
+        upload_folder = app.config['UPLOAD_FOLDER']
+        os.makedirs(upload_folder, exist_ok=True)
+        photo.save(os.path.join(upload_folder, filename))
+
+        # Save property to database
+        prop = Property(
+            title=form.title.data,
+            description=form.description.data,
+            no_of_rooms=form.no_of_rooms.data,
+            no_of_bathrooms=form.no_of_bathrooms.data,
+            location=form.location.data,
+            photo=filename,
+            property_type=form.property_type.data,
+        )
+        db.session.add(prop)
+        db.session.commit()
+
+        flash('Property successfully added!', 'success')
+        return redirect(url_for('properties'))
+
+    flash_errors(form)
+    return render_template('create_property.html', form=form)
+
+
+@app.route('/properties')
+def properties():
+    """Render a list of all properties."""
+    props = Property.query.all()
+    return render_template('properties.html', properties=props)
+
+
+@app.route('/properties/<int:propertyid>')
+def property_view(propertyid):
+    """Render details for a specific property."""
+    prop = Property.query.get_or_404(propertyid)
+    return render_template('property.html', property=prop)
 
 
 ###

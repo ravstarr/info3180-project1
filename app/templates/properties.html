@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block css %}{% endblock %}
+
+{% block main %}
+<div class="row mt-4">
+  <div class="col-12 d-flex justify-content-between align-items-center mb-4">
+    <h1>Properties</h1>
+    <a href="{{ url_for('create_property') }}" class="btn btn-primary">+ New Property</a>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show col-12" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  {% if properties %}
+    {% for prop in properties %}
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 shadow-sm">
+        {% if prop.photo %}
+        <img src="{{ url_for('static', filename='uploads/' + prop.photo) }}"
+             class="card-img-top" alt="{{ prop.title }}" style="height:200px;object-fit:cover;">
+        {% endif %}
+        <div class="card-body">
+          <h5 class="card-title">{{ prop.title }}</h5>
+          <p class="card-text text-muted">{{ prop.location }}</p>
+          <p class="card-text">
+            <span class="badge bg-secondary">{{ prop.property_type | capitalize }}</span>
+            &nbsp;
+            <small>{{ prop.no_of_rooms }} bed &bull; {{ prop.no_of_bathrooms }} bath</small>
+          </p>
+          <a href="{{ url_for('property_view', propertyid=prop.id) }}" class="btn btn-outline-primary btn-sm">View Details</a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="col-12">
+      <p class="text-muted">No properties found. <a href="{{ url_for('create_property') }}">Add one now!</a></p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block js %}{% endblock %}
